@@ -1,1 +1,1010 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tata Motors in the Indian EV market: a twelve-step simulation</title>
+<style>
+:root{
+  --paper:#eef1ee;--card:#fafbfa;--ink:#15202b;--muted:#55636e;
+  --teal:#0b6e63;--teal-soft:#d5ebe5;--coral:#b1402a;--coral-soft:#f5dcd4;
+  --rule:#c3cdc7;--gold:#8c6410;
+}
+*{box-sizing:border-box}
+html{color-scheme:light;scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.6 "Avenir Next","Segoe UI",system-ui,sans-serif}
+h1,h2,h3{font-family:Charter,"Iowan Old Style",Georgia,serif;font-weight:600;line-height:1.2;margin:0 0 .6rem}
+h1{font-size:clamp(1.7rem,3vw,2.4rem);max-width:30ch}
+h2{font-size:clamp(1.35rem,2.4vw,1.8rem)}
+h3{font-size:1.1rem;margin-top:1.2rem}
+p{margin:.5rem 0;max-width:70ch}
+a{color:var(--teal)}
+:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+.masthead{padding:2rem clamp(1rem,4vw,3rem) 1.25rem;border-bottom:1px solid var(--rule)}
+.dek{color:var(--muted);font-size:1.05rem;max-width:64ch}
+.layout{display:grid;grid-template-columns:240px minmax(0,1fr);min-height:100vh}
+.rail{position:sticky;top:0;align-self:start;height:100vh;overflow:auto;padding:1rem .7rem;border-right:1px solid var(--rule)}
+.rail button{display:flex;gap:.6rem;align-items:baseline;width:100%;text-align:left;background:none;border:0;padding:.42rem .6rem;border-radius:6px;color:var(--ink);font:inherit;font-size:.95rem;cursor:pointer}
+.rail button:hover{background:#e0e7e2}
+.rail button[aria-current="step"]{background:var(--teal);color:#fff}
+.rail .n{font-family:Charter,Georgia,serif;min-width:1.4rem;opacity:.85}
+.rail .sep{height:1px;background:var(--rule);margin:.6rem .4rem}
+main{padding:1.5rem clamp(1rem,3.5vw,2.75rem) 4rem;min-width:0}
+.view{max-width:1120px}
+.view[hidden]{display:none}
+.stepno{font-size:.85rem;color:var(--muted);margin:0}
+.intro{font-size:1.02rem;color:var(--muted)}
+.work{display:grid;grid-template-columns:minmax(250px,320px) minmax(0,1fr);gap:1.4rem;margin-top:1rem;align-items:start}
+.panel{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:1rem 1.1rem}
+.field{margin:.85rem 0}
+.field>label{display:block;font-weight:600;font-size:.95rem}
+.row{display:flex;align-items:center;gap:.6rem}
+.row input[type=range]{flex:1;accent-color:var(--teal);min-width:0}
+output{min-width:6rem;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;font-size:.95rem}
+input[type=number],input[type=text],textarea,select{font:inherit;padding:.4rem .5rem;border:1px solid var(--rule);border-radius:6px;background:#fff;color:var(--ink);width:100%}
+textarea{min-height:4.5rem}
+.hint{font-size:.85rem;color:var(--muted);margin:.25rem 0 0}
+.check{display:flex;gap:.5rem;align-items:flex-start;margin:.6rem 0;font-size:.95rem}
+.check input{margin-top:.3rem;accent-color:var(--teal)}
+.readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.6rem;margin:.4rem 0}
+.readout>div{background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:.6rem .75rem}
+.readout dt{font-size:.82rem;color:var(--muted)}
+.readout dd{margin:0;font-size:1.2rem;font-weight:650;font-variant-numeric:tabular-nums}
+.readout .warn dd{color:var(--coral)}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:.92rem;margin:.6rem 0;min-width:320px}
+th,td{text-align:right;padding:.4rem .5rem;border-bottom:1px solid var(--rule);vertical-align:top}
+th:first-child,td:first-child{text-align:left}
+th{font-weight:600;color:var(--muted);font-size:.84rem}
+tr.hit td{background:var(--teal-soft)}
+.eq{font-family:Charter,Georgia,serif;font-size:1.04rem;background:#fff;border-left:3px solid var(--teal);padding:.4rem .8rem;margin:.6rem 0;border-radius:0 6px 6px 0}
+.note{font-size:.95rem;color:var(--muted)}
+.notes{margin-top:1.2rem;max-width:920px}
+.chart{margin:.5rem 0}
+.chart svg{width:100%;height:auto;overflow:hidden;display:block}
+.chart .grid{stroke:#d5ddd8;stroke-width:1}
+.chart .axis{stroke:#7f8c85;stroke-width:1.2}
+.chart .tick{font-size:11px;fill:var(--muted)}
+.chart .ttl{font-size:12px;fill:var(--ink)}
+.legend{display:flex;flex-wrap:wrap;gap:.9rem;font-size:.85rem;color:var(--muted);margin:.2rem 0 .6rem}
+.legend i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:.35rem;border-radius:2px}
+.pager{display:flex;justify-content:space-between;gap:1rem;margin-top:2rem;padding-top:1rem;border-top:1px solid var(--rule)}
+button{font:inherit;padding:.5rem .95rem;border-radius:7px;border:1px solid var(--teal);background:var(--teal);color:#fff;cursor:pointer;margin:.2rem .3rem .2rem 0}
+button.ghost{background:transparent;color:var(--teal)}
+button.quiet{background:transparent;color:var(--coral);border-color:var(--coral)}
+.moves{display:flex;gap:.6rem;flex-wrap:wrap;margin:.6rem 0}
+.tag{display:inline-block;font-size:.8rem;padding:.05rem .5rem;border-radius:99px;background:var(--teal-soft);color:var(--teal);font-weight:600;margin-left:.3rem}
+.tag.bad{background:var(--coral-soft);color:var(--coral)}
+.cols2{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.logitem{border:1px solid var(--rule);border-radius:8px;padding:.7rem .9rem;margin:.6rem 0;background:var(--card)}
+.logitem p{margin:.25rem 0}
+.snap{font-size:.85rem;color:var(--muted)}
+.ok{color:var(--teal);font-weight:600}
+.no{color:var(--coral);font-weight:600}
+@media (max-width:860px){
+  .layout{grid-template-columns:1fr}
+  .rail{position:sticky;top:0;height:auto;display:flex;overflow-x:auto;border-right:0;border-bottom:1px solid var(--rule);padding:.5rem;z-index:2;background:var(--paper)}
+  .rail button{width:auto;white-space:nowrap}
+  .rail .sep{display:none}
+  .work,.cols2{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<header class="masthead">
+  <h1>Tata Motors in the Indian electric car market</h1>
+  <p class="dek">A twelve-step simulation of demand, cost, pricing and rivalry. Change a control in any step and the economics recalculate, so you can test a decision before you commit to it.</p>
+</header>
+<div class="layout">
+  <nav class="rail" id="rail" aria-label="Simulation steps"></nav>
+  <main id="main"></main>
+</div>
 
+<!-- ===================== ENGINE: pure equations, no page access ===================== -->
+<script id="engine">
+'use strict';
+const RNG=seed=>{let s=seed>>>0;return()=>{s=(s+0x6D2B79F5)>>>0;let t=s;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296;};};
+const gauss=r=>{let u=0;while(u===0)u=r();const v=r();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);};
+function solve(A,b){
+  const n=b.length,M=A.map((r,i)=>[...r,b[i]]);
+  for(let c=0;c<n;c++){
+    let p=c;for(let r=c+1;r<n;r++)if(Math.abs(M[r][c])>Math.abs(M[p][c]))p=r;
+    [M[c],M[p]]=[M[p],M[c]];
+    for(let r=0;r<n;r++){if(r===c)continue;const f=M[r][c]/M[c][c];for(let j=c;j<=n;j++)M[r][j]-=f*M[c][j];}
+  }
+  return M.map((r,i)=>r[n]/r[i]);
+}
+function ticks(a,b,n){
+  const raw=(b-a)/n;if(!(raw>0))return[a];
+  const p=Math.pow(10,Math.floor(Math.log10(raw)));const f=raw/p;
+  const s=(f<1.5?1:f<3?2:f<7?5:10)*p;const out=[];
+  for(let t=Math.ceil(a/s-1e-9)*s;t<=b+1e-9;t+=s)out.push(parseFloat(t.toFixed(10)));
+  return out;
+}
+
+const E={
+  // Step 1: Qd = a - bP, Qs = c + dP (calibrated: a=14229, b=50, c=4229, d=50)
+  mkt(dA=0,dC=0){const a=14229+dA,c=4229+dC,P=(a-c)/100;return{a,c,P,Q:a-50*P};},
+
+  // Step 4: Qd = 14229 - 50P + 20(N-50) + 30(R-100)
+  demandRaw(P,N,R){return 14229-50*P+20*(N-50)+30*(R-100);},
+  demand(P,N,R){return Math.max(0,E.demandRaw(P,N,R));},
+  // CS = 1/2 (Pmax - Pe) Qe, in index-point x vehicle units
+  cs(P,N,R){const a=14229+20*(N-50)+30*(R-100),Pmax=a/50,Q=Math.max(0,a-50*P);return{Pmax,Q,CS:P<Pmax?0.5*(Pmax-P)*Q:0};},
+
+  // Step 3: real income = nominal / (CPI / 100)
+  realInc(N,cpi){return N/(cpi/100);},
+
+  // Step 2: segments, utility U = x^alpha y^(1-alpha), budget Pev x + Psub y = M
+  segs2:[
+    {name:'Budget-conscious buyers',M:10,alpha:0.45,w:0.40},
+    {name:'Mainstream family buyers',M:16,alpha:0.5,w:0.35},
+    {name:'Premium buyers',M:25,alpha:0.55,w:0.25}
+  ],
+  choose2(s,pe,ps){const x=s.alpha*s.M/pe,y=(1-s.alpha)*s.M/ps;return{x,y,spend:s.alpha*s.M,U:Math.pow(x,s.alpha)*Math.pow(y,1-s.alpha),afford:pe<=s.M};},
+
+  // Step 5: built-in true model for the regression exercise
+  TRUE5:{b0:9729,b1:-50,b2:30,b3:15},
+  gen5(seed,sigma,nP,nY,nS){
+    const r=RNG(seed),rows=[];
+    for(let t=1;t<=36;t++){
+      const P=100+6*Math.sin(t/4)+2*gauss(r);
+      const Y=100+0.25*t+1.5*gauss(r);
+      const S=100+4*Math.sin(t/6+1)+1.5*gauss(r);
+      const Q=E.TRUE5.b0+E.TRUE5.b1*P+E.TRUE5.b2*Y+E.TRUE5.b3*S+sigma*gauss(r);
+      rows.push({t,P,Y,S,Q});
+    }
+    const xTrue=E.TRUE5.b0+E.TRUE5.b1*nP+E.TRUE5.b2*nY+E.TRUE5.b3*nS;
+    return{rows,xTrue,actual:xTrue+sigma*gauss(r)};
+  },
+  ols(rows){
+    const k=4,XtX=Array.from({length:k},()=>Array(k).fill(0)),Xty=Array(k).fill(0);
+    rows.forEach(r=>{const x=[1,r.P,r.Y,r.S];for(let i=0;i<k;i++){Xty[i]+=x[i]*r.Q;for(let j=0;j<k;j++)XtX[i][j]+=x[i]*x[j];}});
+    return solve(XtX,Xty);
+  },
+  r2(rows,b){const Qm=E.mean(rows.map(r=>r.Q));let sse=0,sst=0;rows.forEach(r=>{const f=b[0]+b[1]*r.P+b[2]*r.Y+b[3]*r.S;sse+=(r.Q-f)**2;sst+=(r.Q-Qm)**2;});return 1-sse/sst;},
+  fitted(b,r){return b[0]+b[1]*r.P+b[2]*r.Y+b[3]*r.S;},
+  mean(a){return a.reduce((s,x)=>s+x,0)/a.length;},
+
+  // Step 6: illustrative schedule (total product by number of labour teams)
+  TP:[0,100,220,360,480,570,630,670,690],
+
+  // Step 7: [upper bound of range, variable cost at lower bound, marginal cost in range]
+  SEG7:[[100,0,9.5],[220,950,9.7],[360,2114,10],[480,3514,10.5],[570,4774,11],[630,5764,12],[670,6484,13],[Infinity,7004,14]],
+  vc7(Q){if(Q<=0)return 0;let lo=0;for(const [hi,base,rate] of E.SEG7){if(Q<=hi)return base+rate*(Q-lo);lo=hi;}return 0;},
+  mc7(Q){for(const [hi,,rate] of E.SEG7){if(Q<=hi)return rate;}return 14;},
+  FC:500,
+
+  // Step 9: P = 25 - 0.02Q (lakh per vehicle), profit = TR - (FC + VC)
+  profit9(Q){return Q*(25-0.02*Q)-(500+E.vc7(Q));},
+  opt9(){let lo=0;for(const [hi,,rate] of E.SEG7){const q=(25-rate)/0.04;if(q>lo&&q<=hi)return{Q:q,rate};lo=hi;}return null;},
+  brute9(){let best=-Infinity,bq=0;for(let q=0;q<=800;q++){const p=E.profit9(q);if(p>best+1e-9){best=p;bq=q;}}return{Q:bq,pi:best};},
+
+  // Step 10: Q1 = 500 - 20P1, Q2 = 400 - 10P2, Q3 = 300 - 5P3, MC = 10, FC = 500
+  SEG10:[{name:'Budget segment',a:500,b:20},{name:'Mainstream segment',a:400,b:10},{name:'Premium segment',a:300,b:5}],
+  segQ(s,P){return Math.max(0,s.a-s.b*P);},
+  seg10Opt(s){return(s.a/s.b+10)/2;},
+  segmented(Ps){const Q=E.SEG10.reduce((t,s,i)=>t+E.segQ(s,Ps[i]),0);const TR=E.SEG10.reduce((t,s,i)=>t+Ps[i]*E.segQ(s,Ps[i]),0);const TC=500+10*Q;return{Q,TR,TC,pi:TR-TC};},
+  uniform(P){const Q=Math.max(0,1200-35*P);const TR=P*Q,TC=500+10*Q;return{Q,TR,TC,pi:TR-TC};},
+  uniformOpt(){return(1200/35+10)/2;},
+
+  // Step 8: JMK FY2024-25 shares
+  FIRMS:[{n:'Tata Motors',s:53.10},{n:'MG Motor',s:28.17},{n:'Mahindra',s:7.73},{n:'BYD India',s:3.22},{n:'Hyundai',s:2.32}],
+  residual(){return 100-E.FIRMS.reduce((a,f)=>a+f.s,0);},
+  hhiFull(){const r=E.residual();return E.FIRMS.reduce((a,f)=>a+f.s*f.s,0)+4*Math.pow(r/4,2);},
+  selMarket(incl){
+    const r=E.residual(),firms=[E.FIRMS[0].s];
+    E.FIRMS.slice(1).forEach((f,i)=>{if(incl[i])firms.push(f.s);});
+    const tot=firms.reduce((a,b)=>a+b,0)+r;
+    const shares=firms.map(s=>s/tot*100);
+    const hhi=shares.reduce((a,s)=>a+s*s,0)+4*Math.pow((r/tot*100)/4,2);
+    return{tataShare:shares[0],hhi,tot};
+  },
+  rival(lam,dPT){return lam*dPT;},
+
+  // Step 11: payoffs [Tata, MG]; key = Tata move + MG move; M = maintain, R = reduce
+  PAY:{MM:[100,100],MR:[60,120],RM:[120,60],RR:[75,75]},
+  nash(){return['MM','MR','RM','RR'].filter(k=>{const t=k[0],g=k[1];const tAlt=(t==='M'?'R':'M')+g,gAlt=t+(g==='M'?'R':'M');return E.PAY[k][0]>=E.PAY[tAlt][0]&&E.PAY[k][1]>=E.PAY[gAlt][1];});},
+
+  // Step 12: Q' = Q0(1+(D+I)/100), VC' = Q' AVC0 (1+B/100), TR' = P Q', TC' = FC + VC', pi' = TR' - TC'
+  scen12(P,D,B,I,green,gc,cut,mec){
+    const Q0=50*(25-P),Q=Q0*(1+(D+I)/100),AVC=9.766*(1+B/100),VC=Q*AVC;
+    const FC=500+(green?gc:0),TR=P*Q,TC=FC+VC,pi=TR-TC,m=mec*(green?(1-cut/100):1);
+    return{Q0,Q,AVC,VC,TR,TC,pi,ext:m*Q,social:pi-m*Q,mec:m};
+  },
+
+  // Checks drawn from the model document's own numbers
+  checks(){
+    const out=[];const add=(n,ok,d)=>out.push({n,ok:!!ok,d:d||''});
+    const m=E.mkt(0,0);
+    add('Step 1: baseline equilibrium is price index 100 and 9,229 vehicles',Math.abs(m.P-100)<1e-9&&Math.abs(m.Q-9229)<1e-6,`P = ${m.P.toFixed(1)}, Q = ${m.Q.toFixed(0)}`);
+    add('Step 1: a higher demand intercept raises the price',E.mkt(500,0).P>m.P);
+    add('Step 1: a higher supply intercept lowers the price',E.mkt(0,500).P<m.P);
+    add('Step 2: a smaller budget buys less at the same price',E.choose2({M:10,alpha:0.5},14,14).x<E.choose2({M:16,alpha:0.5},14,14).x);
+    add('Step 2: a higher EV price reduces EV purchases',E.choose2(E.segs2[1],18,14).x<E.choose2(E.segs2[1],14,14).x);
+    add('Step 3: ₹1,00,000 at CPI 110.05 is worth about ₹90,868',Math.round(E.realInc(100000,110.05))===90868);
+    add('Step 4: demand at price 100, network 50, real income 100 is 9,229',E.demandRaw(100,50,100)===9229);
+    add('Step 4: consumer surplus falls as price rises',E.cs(110,50,100).CS<E.cs(100,50,100).CS);
+    add('Step 4: baseline consumer surplus is 851,744 (index points times vehicles)',Math.abs(E.cs(100,50,100).CS-851744.41)<1);
+    const g=(109271-99085)/99085;
+    add('Step 5: FY2024–25 growth is 10.28% and the FY2025–26 trend forecast is about 120,504',Math.abs(g*100-10.28)<0.005&&Math.abs(109271*1.1028-120504)<1);
+    const b=E.ols(E.gen5(42,300,100,100,100).rows);
+    add('Step 5: estimated signs are right (price negative; income and substitute positive) on the default seed',b[1]<0&&b[2]>0&&b[3]>0,`β1 = ${b[1].toFixed(1)}, β2 = ${b[2].toFixed(1)}, β3 = ${b[3].toFixed(1)}`);
+    add('Step 6: average product at 5 teams is 114 and team 6 adds 60 vehicles',E.TP[5]/5===114&&E.TP[6]-E.TP[5]===60);
+    add('Step 6: marginal product falls after team 3',(E.TP[4]-E.TP[3])<(E.TP[3]-E.TP[2]));
+    add('Step 7: variable cost at 360 vehicles is ₹3,514 lakh',E.vc7(360)===3514);
+    add('Step 7: marginal cost rises across output ranges',E.SEG7.every((s,i,arr)=>i===0||s[2]>arr[i-1][2]));
+    const cr4=53.10+28.17+7.73+3.22;
+    add('Step 8: CR4 is 92.22% and HHI is about 3,696',Math.abs(cr4-92.22)<1e-9&&Math.abs(E.hhiFull()-3696)<1);
+    add('Step 8: removing all rivals raises Tata share',E.selMarket([false,false,false,false]).tataShare>E.selMarket([true,true,true,true]).tataShare);
+    add('Step 8: λ = 0.5 with a ₹10 cut in Tata price moves rivals by −5',E.rival(0.5,-10)===-5);
+    const o=E.opt9(),bf=E.brute9();
+    add('Step 9: MR = MC gives 362.5 vehicles',o&&Math.abs(o.Q-362.5)<1e-9);
+    add('Step 9: brute-force search agrees with the formula to within half a vehicle',o&&Math.abs(o.Q-bf.Q)<=0.5);
+    add('Step 9: profit at the optimum is ₹2,394.13 lakh',Math.abs(E.profit9(362.5)-2394.125)<0.01);
+    const sg=E.segmented(E.SEG10.map(s=>E.seg10Opt(s))),un=E.uniform(E.uniformOpt());
+    add('Step 10: segmented profit at optimal prices is ₹6,000 lakh',Math.abs(sg.pi-6000)<1e-6);
+    add('Step 10: uniform profit is ₹4,660.71 lakh',Math.abs(un.pi-4660.71)<0.01);
+    add('Step 10: segmented pricing earns at least as much as uniform pricing',sg.pi>=un.pi);
+    add('Step 11: the only Nash equilibrium is reduce and reduce, paying (75, 75)',JSON.stringify(E.nash())==='["RR"]');
+    add('Step 11: reducing price is dominant for Tata',E.PAY.RM[0]>E.PAY.MM[0]&&E.PAY.RR[0]>E.PAY.MR[0]);
+    add('Step 12: with zero shocks, output at ₹17.75 is 362.5 (the document rounds to 363)',Math.abs(E.scen12(17.75,0,0,0,false,0,0,0).Q-362.5)<1e-9);
+    add('Step 12: a 10% battery-cost shock raises average variable cost to about ₹10.743 lakh',Math.abs(9.766*1.1-10.743)<0.0005);
+    add('Extreme: a price above the choke price gives zero demand',E.demand(300,50,100)===0);
+    add('Extreme: a zero price gives demand of 14,229',E.demandRaw(0,50,100)===14229);
+    return out;
+  }
+};
+</script>
+
+<!-- ===================== INTERFACE ===================== -->
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+const num=id=>{const v=parseFloat($(id).value);return isNaN(v)?0:v;};
+const chk=id=>$(id).checked;
+const sv=id=>$(id).value;
+const fmt=(n,d=0)=>(isFinite(n)?n:0).toLocaleString('en-IN',{minimumFractionDigits:d,maximumFractionDigits:d});
+const rs=(n,d=0)=>'₹'+fmt(n,d);
+const lk=(n,d=2)=>'₹'+fmt(n,d)+' lakh';
+const pct=(n,d=2)=>fmt(n,d)+'%';
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmtT=t=>fmt(t,Number.isInteger(t)?0:1);
+const visited=new Set();
+let G11={hist:[]};
+let RUNS=[];
+let LOG=[];
+let LAST5=null;
+
+function readouts(items){
+  return '<dl class="readout">'+items.map(([k,v,w])=>`<div class="${w?'warn':''}"><dt>${k}</dt><dd>${v}</dd></div>`).join('')+'</dl>';
+}
+function table(head,rows){
+  const th=head.map(h=>`<th scope="col">${h}</th>`).join('');
+  const tb=rows.map(r=>{const cells=Array.isArray(r)?r:r.cells;const cls=(!Array.isArray(r)&&r.cls)?` class="${r.cls}"`:'';return `<tr${cls}>`+cells.map(c=>`<td>${c}</td>`).join('')+'</tr>';}).join('');
+  return `<div class="tablewrap"><table><thead><tr>${th}</tr></thead><tbody>${tb}</tbody></table></div>`;
+}
+function plot(o){
+  const W=o.w||640,H=o.h||280,L=58,R=14,T=24,B=40;
+  const [x0,x1]=o.x,[y0,y1]=o.y;
+  const X=v=>L+(v-x0)/(x1-x0)*(W-L-R),Y=v=>H-B-(v-y0)/(y1-y0)*(H-T-B);
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(o.label||'Chart')}">`;
+  ticks(y0,y1,5).forEach(t=>{s+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${Y(t)}" y2="${Y(t)}"/><text class="tick" x="${L-6}" y="${Y(t)+4}" text-anchor="end">${fmtT(t)}</text>`;});
+  ticks(x0,x1,6).forEach(t=>{s+=`<text class="tick" x="${X(t)}" y="${H-B+16}" text-anchor="middle">${fmtT(t)}</text>`;});
+  s+=`<line class="axis" x1="${L}" x2="${L}" y1="${T}" y2="${H-B}"/><line class="axis" x1="${L}" x2="${W-R}" y1="${H-B}" y2="${H-B}"/>`;
+  if(o.xl)s+=`<text class="tick" x="${(L+W-R)/2}" y="${H-6}" text-anchor="middle">${esc(o.xl)}</text>`;
+  if(o.yl)s+=`<text class="ttl" x="${L}" y="${T-8}">${esc(o.yl)}</text>`;
+  (o.series||[]).forEach(se=>{
+    const pts=se.pts.filter(p=>isFinite(p[0])&&isFinite(p[1]));
+    const d=pts.map((p,i)=>(i?'L':'M')+X(p[0]).toFixed(1)+' '+Y(p[1]).toFixed(1)).join(' ');
+    s+=`<path d="${d}" fill="none" stroke="${se.color}" stroke-width="${se.w||2.2}"${se.dash?` stroke-dasharray="${se.dash}"`:''} stroke-linejoin="round"/>`;
+  });
+  (o.dots||[]).forEach(p=>{
+    s+=`<circle cx="${X(p[0]).toFixed(1)}" cy="${Y(p[1]).toFixed(1)}" r="4.5" fill="${p[2]||'#15202b'}"/>`;
+    if(p[3])s+=`<text class="ttl" x="${(X(p[0])+7).toFixed(1)}" y="${(Y(p[1])-7).toFixed(1)}">${esc(p[3])}</text>`;
+  });
+  s+='</svg>';
+  const legend=(o.series||[]).filter(se=>se.name).map(se=>`<span><i style="background:${se.color}"></i>${esc(se.name)}</span>`).join('');
+  return `<div class="chart">${s}</div>${legend?`<div class="legend">${legend}</div>`:''}`;
+}
+function sl(id,label,min,max,step,v,o={}){
+  return `<div class="field"><label for="${id}">${label}</label><div class="row"><input type="range" id="${id}" min="${min}" max="${max}" step="${step}" value="${v}" data-u="${o.u||''}" data-d="${o.d||0}" data-pre="${o.pre||''}"><output id="${id}-o" for="${id}"></output></div>${o.hint?`<p class="hint">${o.hint}</p>`:''}</div>`;
+}
+function nf(id,label,v,hint=''){
+  return `<div class="field"><label for="${id}">${label}</label><input type="number" id="${id}" value="${v}" step="any">${hint?`<p class="hint">${hint}</p>`:''}</div>`;
+}
+function cb(id,label,on){return `<label class="check"><input type="checkbox" id="${id}"${on?' checked':''}><span>${label}</span></label>`;}
+function sel(id,label,opts,cur){
+  return `<div class="field"><label for="${id}">${label}</label><select id="${id}">${opts.map(o=>`<option${o===cur?' selected':''}>${esc(o)}</option>`).join('')}</select></div>`;
+}
+function syncOut(el){
+  const o=$(el.id+'-o');if(!o)return;
+  const d=+el.dataset.d||0;
+  o.textContent=(el.dataset.pre||'')+fmt(+el.value,d)+(el.dataset.u||'');
+}
+function ticks(a,b,n){return E_ticks(a,b,n);}
+function E_ticks(a,b,n){
+  const raw=(b-a)/n;if(!(raw>0))return[a];
+  const p=Math.pow(10,Math.floor(Math.log10(raw)));const f=raw/p;
+  const s=(f<1.5?1:f<3?2:f<7?5:10)*p;const out=[];
+  for(let t=Math.ceil(a/s-1e-9)*s;t<=b+1e-9;t+=s)out.push(parseFloat(t.toFixed(10)));
+  return out;
+}
+
+/* ---------- step definitions: titles, intros, controls, notes ---------- */
+const STEPS={};
+const SHORT={1:'Demand and supply',2:'Customers and substitutes',3:'Inflation and real income',4:'Demand and network effects',5:'Demand forecasting',6:'Production',7:'Costs',8:'Market structure',9:'Profit maximisation',10:'Price discrimination',11:'Rivals and game theory',12:'Externalities and risk'};
+
+STEPS[1]={
+  title:'Market demand, supply and equilibrium',
+  intro:'We start with the whole electric passenger vehicle market rather than Tata alone. Demand and supply meet at one price index and one monthly quantity. Shift either curve and watch the equilibrium move.',
+  controls:
+    sl('s1dA','Demand shifter',-1000,1000,50,0,{u:' vehicles',d:0,hint:'Change in the demand intercept. Positive values mean more buyers at every price, for example from rising incomes.'})+
+    sl('s1dC','Supply shifter',-1000,1000,50,0,{u:' vehicles',d:0,hint:'Change in the supply intercept. Positive values mean more supply at every price, for example from cheaper battery cells.'}),
+  notes:'<p class="note">Calibration: at price index 100 both equations give 9,229 vehicles a month. That is the FY2024–25 registration total of 110,748 divided by 12. The coefficients are illustrative assumptions, not estimates of the real market.</p><p class="note">Check: a rise in demand raises the price, and a rise in supply lowers it.</p>'
+};
+STEPS[2]={
+  title:'Customer segments, budgets and substitutes',
+  intro:'Customers are split into three model-defined segments with different budgets and preferences. Each segment chooses between an EV and a substitute within its budget. The budget line shows what it can afford, and the indifference curve shows the best mix it can reach.',
+  controls:
+    sel('s2seg','Segment to draw',STEPS_SEG2_NAMES(),STEPS_SEG2_NAMES()[0])+
+    sl('s2pev','EV price',6,30,0.25,16,{u:' lakh',d:2,hint:'Ex-showroom price of the EV in ₹ lakh.'})+
+    sl('s2psub','Price of a substitute car',6,30,0.25,14,{u:' lakh',d:2,hint:'A petrol, CNG or hybrid car in the same segment.'}),
+  notes:'<p class="note">The utility form U = x^α × y^(1−α) is our teaching device for the "utility explanation" the document allows. Here x counts EV-equivalent units (budget share spent on EVs divided by the EV price), so it shows the direction and size of the response, not a vehicle count. Segment budgets (₹10, ₹16 and ₹25 lakh), preference shares α and segment weights are simulation assumptions based on the document\'s price bands.</p>'
+};
+function STEPS_SEG2_NAMES(){return E.segs2.map(s=>s.name);}
+STEPS[3]={
+  title:'Cost of living and price indices',
+  intro:'Inflation changes what a fixed income can buy. The Tata EV price index (2025 = 100) is kept separate from general inflation (CPI). Real values remove inflation from both.',
+  controls:
+    sl('s3cpi','CPI, 2024 = 100',100,130,0.05,110.05,{d:2,hint:'110.05 is the October 2026 value from the document.'})+
+    sl('s3inc','Monthly nominal household income',50000,300000,5000,100000,{pre:'₹',d:0,hint:'Held constant in the default scenario.'})+
+    sl('s3ev','Tata EV price index, 2025 = 100',80,140,1,105,{d:0,hint:'105 is the illustrative 2026 value from the document.'}),
+  notes:'<p class="note">The real income index R equals 100 when real income is ₹1,00,000, the base. R feeds Step 4 if you tick the box there. The real EV price index is the EV index divided by (CPI ÷ 100), which states EV prices in purchasing power terms. The CPI uses the revised 2024 = 100 series, while the EV index uses 2025 = 100, so the two indices are not directly comparable.</p>'
+};
+STEPS[4]={
+  title:'Market demand, network effects and consumer surplus',
+  intro:'Demand now depends on price, real income and the EV ecosystem score, not just price. Consumer surplus is the value buyers keep when they pay less than they would have been willing to pay.',
+  controls:
+    sl('s4P','EV market price index',60,140,1,100,{u:' index',d:0,hint:'Set on the 2025 = 100 scale.'})+
+    sl('s4N','EV ecosystem score',30,100,1,50,{u:' points',d:0,hint:'Charging, service and spare-parts availability, from 0 to 100.'})+
+    cb('s4useR','Use the real income index from Step 3',false)+
+    sl('s4R','Real household income index',60,130,0.5,100,{u:' points',d:1,hint:'Used only when the box above is not ticked.'}),
+  notes:'<p class="note">Demand is Qd = 14,229 − 50P + 20(N − 50) + 30(R − 100). The coefficients 20 and 30 are illustrative. Consumer surplus is in index-point × vehicle units, not rupees; turning it into rupees needs a rupee price for the demand curve. Segment shares are the Step 2 weights, which is our assumption.</p>'
+};
+STEPS[5]={
+  title:'Demand forecasting',
+  intro:'This step moves from assumed demand to estimated demand. The regression runs on 36 months of data generated from the Step 4 structure with random noise, so you can check whether the method recovers the true effects. Replace the generated data with VAHAN and JMK figures when you have them.',
+  controls:
+    nf('s5seed','Random seed',42,'Same seed gives the same dataset.')+
+    sl('s5sig','Noise in monthly registrations',0,800,10,300,{u:' vehicles',d:0,hint:'Standard deviation of the random error term.'})+
+    sl('s5nP','Next month: EV price index',80,120,1,100,{d:0})+
+    sl('s5nY','Next month: real income index',90,115,0.5,100,{d:1})+
+    sl('s5nS','Next month: substitute price index',90,115,0.5,100,{d:1})+
+    sl('s5g','Trend growth, FY2024–25',0,30,0.01,10.28,{u:'%',d:2,hint:'Growth in electric car sales from FY2023–24 to FY2024–25.'})+
+    sl('s5spread','Best and worst case spread',0,10,0.5,3,{u:' points',d:1,hint:'Added to and taken from trend growth for the scenarios. Our assumption.'})+
+    nf('s5base','Base annual sales for the illustrative forecast',108000)+
+    sl('s5fg','Growth for the illustrative forecast',-20,20,0.1,-1,{u:'%',d:1})+
+    sl('s5fy','Forecast period',1,5,1,1,{u:' years',d:0})+
+    nf('s5user','Your forecast of next month\'s registrations',9500,'Compared with the simulated actual in the scorecard.'),
+  notes:'<p class="note">Expected signs are economic predictions. The true values are what we built into the generator: β0 = 9,729, β1 = −50, β2 = 30 and β3 = 15. The substitute effect β3 = 15 is our assumption. Estimates should land near these values, and their signs should match the theory. Annual forecasts assume the chosen growth rate continues unchanged, so actual sales can differ because of launches, prices, subsidies and charging.</p>'
+};
+STEPS[6]={
+  title:'Production with one fixed input',
+  intro:'Factory space and machinery are fixed in the short run. Adding production teams raises output at first, then each extra team adds less.',
+  controls:sl('s6L','Labour teams',0,8,1,3,{u:' teams',d:0,hint:'One team is 10 workers. The factory space and machinery stay fixed.'}),
+  notes:'<p class="note">This is the illustrative schedule from the document, not Tata\'s actual output. Diminishing marginal returns set in after the third team. Total product keeps rising, but by less each time. Average product peaks where marginal product equals average product, which here is at three and four teams.</p>'
+};
+STEPS[7]={
+  title:'Short-run and long-run costs',
+  intro:'Fixed costs of ₹500 lakh a month are spread over more vehicles as output rises. Variable cost follows a schedule whose marginal cost rises with output. Pick an output level to read the cost curves.',
+  controls:sl('s7Q','Monthly output',10,800,1,360,{u:' vehicles',d:0,hint:'Fixed cost is ₹500 lakh a month whatever the output.'}),
+  notes:'<p class="note">The long-run view is explained rather than calculated. The document has no reliable long-run cost data for Tata\'s EV operations, so no minimum efficient scale is assigned. Economies of scale appear as average cost falling as output rises, and diseconomies as it rises again. The cost schedule is an educational assumption, not Tata\'s actual manufacturing cost.</p>'
+};
+STEPS[8]={
+  title:'Market structure and competitor response',
+  intro:'Tata\'s share and its rivals\' reactions depend on how many firms compete and how strongly they follow a price move. The document classifies this market as a differentiated oligopoly.',
+  controls:
+    cb('s8r1','Include MG Motor',true)+cb('s8r2','Include Mahindra',true)+cb('s8r3','Include BYD India',true)+cb('s8r4','Include Hyundai',true)+
+    nf('s8p0','Tata price index before the move',100)+
+    nf('s8p1','Tata price index after the move',90)+
+    sl('s8lam','Rival response coefficient λ',0,1,0.05,0.5,{d:2,hint:'0 means rivals ignore the move. 1 means they match it fully.'})+
+    sel('s8struct','Market structure label',['Perfect competition','Monopolistic competition','Differentiated oligopoly','Monopoly'],'Differentiated oligopoly'),
+  notes:'<p class="note">The residual 5.46% belongs to smaller makers and always stays in the market. Its share is split across four equal firms, which reproduces the document\'s HHI of about 3,696. Removing rivals raises Tata\'s share, which is the sense in which more rivals reduce market power. The response coefficient is an assumption, not an estimate from observed rival prices.</p>'
+};
+STEPS[9]={
+  title:'Profit maximisation',
+  intro:'Set an output and compare it with the profit-maximising point, where marginal revenue equals marginal cost. A brute-force search over every whole-vehicle output checks the algebra.',
+  controls:sl('s9Q','Monthly output',1,800,1,300,{u:' vehicles',d:0,hint:'Try 362 and 363 to see the optimum. They give almost the same profit.'}),
+  notes:'<p class="note">Inverse demand is P = 25 − 0.02Q in ₹ lakh per vehicle, with the Step 7 cost schedule. The intercept and slope are illustrative. The profit shown is a simulated result and must not be presented as Tata\'s actual profit. Step 10 uses different demand functions, so its profit should not be compared with this step.</p>'
+};
+STEPS[10]={
+  title:'Segmented pricing',
+  intro:'Customers differ in price sensitivity. Setting a separate price for each segment can earn more than one price for everyone, provided the segments respond differently.',
+  controls:
+    sl('s10p1','Budget segment price',5,40,0.25,17.5,{u:' lakh',d:2})+
+    sl('s10p2','Mainstream segment price',5,40,0.25,25,{u:' lakh',d:2})+
+    sl('s10p3','Premium segment price',5,40,0.25,35,{u:' lakh',d:2,hint:'Optimal prices are 17.50, 25.00 and 35.00 lakh.'}),
+  notes:'<p class="note">Segment demands are Q1 = 500 − 20P1, Q2 = 400 − 10P2 and Q3 = 300 − 5P3, with a constant marginal cost of ₹10 lakh and ₹500 lakh fixed cost. Tata selling different models at different prices is product differentiation. This step uses segment demand functions to show the concept of price discrimination. Compare profits within this step only.</p>'
+};
+STEPS[11]={
+  title:'Strategic rivalry and repeated games',
+  intro:'Tata and MG each choose to maintain or reduce price. Reducing is the best move in a single round whatever MG does, yet repeated play can change the picture.',
+  controls:
+    sel('s11mg','MG Motor strategy',['Tit-for-tat','Always reduce','Always maintain'],'Tit-for-tat')+
+    '<p class="hint">Tit-for-tat starts by maintaining, then copies Tata\'s previous move. Changing the strategy starts the game again.</p>'+
+    '<p class="hint">Choose a move for Tata in the output panel. Each round records the payoffs.</p>',
+  notes:'<p class="note">Payoffs are hypothetical scores, not profit figures. The model shows the prisoner\'s dilemma and does not recommend coordination or price-fixing between firms. Mutual maintenance pays both (100, 100), but each firm gains by reducing if the other maintains, so the outcome is unstable.</p>'
+};
+STEPS[12]={
+  title:'Externalities, risk and uncertainty',
+  intro:'EVs cut local exhaust emissions but carry lifecycle and disposal costs. This step adds random shocks and an external cost, then shows how profit responds and what a cautious choice looks like.',
+  controls:
+    sl('s12D','Demand shock',-30,30,1,0,{u:'%',d:0,hint:'Change in monthly sales.'})+
+    sl('s12B','Battery-cost shock',0,30,1,0,{u:'%',d:0,hint:'Rise in variable cost per vehicle.'})+
+    sl('s12I','Charging-infrastructure effect',-15,15,1,0,{u:'%',d:0,hint:'Demand effect of charging access.'})+
+    sl('s12P','Selling price',15,20,0.25,17.75,{u:' lakh',d:2,hint:'17.75 is the Step 9 optimum.'})+
+    sl('s12mec','External cost per vehicle',0,2,0.05,0.25,{u:' lakh',d:2,hint:'A scenario value for emissions, mineral extraction and waste. It is not an estimate.'})+
+    cb('s12green','Invest in battery recycling',false)+
+    nf('s12gc','Added monthly cost of recycling (₹ lakh)',20)+
+    sl('s12cut','Cut in external cost from recycling',0,90,5,40,{u:'%',d:0,hint:'A scenario value.'})+
+    sel('s12risk','Risk appetite',['Risk-neutral','Risk-averse'],'Risk-neutral')+
+    cb('s12rand','Random shocks in each run',true)+
+    nf('s12seed','Seed for runs',7),
+  notes:'<p class="note">Shock formulas: Q\' = Q0 × (1 + (D + I)/100), VC\' = Q\' × AVC0 × (1 + B/100) with AVC0 = ₹9.766 lakh, TR\' = P × Q\', and profit π\' = TR\' − TC\'. Q0 is 50 × (25 − P), which gives 362.5 at ₹17.75; the document rounds this to 363. The document uses a constant average variable cost here, so its neutral optimum sits slightly away from Step 9\'s schedule-based optimum. Social profit subtracts external cost, MEC × Q\'. Private profit is unaffected unless the external cost is taxed or regulated.</p>'
+};
+
+/* ---------- renders ---------- */
+const RENDER={};
+
+RENDER[1]=()=>{
+  const dA=num('s1dA'),dC=num('s1dC');
+  const m=E.mkt(dA,dC),a=m.a,c=m.c;
+  const rows=[80,90,100,110,120].map(p=>{const qd=a-50*p,qs=c+50*p;const cond=qd>qs?'Shortage':qd<qs?'Surplus':'Balanced';return{cls:Math.abs(p-m.P)<5&&p===Math.round(m.P/10)*10?'hit':'',cells:[fmt(p),fmt(qd),fmt(qs),fmt(qd-qs),cond]};});
+  const dem=[],sup=[];for(let p=60;p<=140;p+=2){dem.push([p,a-50*p]);sup.push([p,c+50*p]);}
+  $('o1').innerHTML=
+    readouts([
+      ['Equilibrium price index',fmt(m.P,1)],
+      ['Equilibrium quantity (vehicles a month)',fmt(m.Q)],
+      ['Demand equation',`Qd = ${fmt(a)} − 50P`],
+      ['Supply equation',`Qs = ${fmt(c)} + 50P`]
+    ])+
+    plot({label:'Demand and supply curves',w:640,h:300,x:[60,140],y:[0,18000],xl:'Price index',yl:'Vehicles a month',
+      series:[{pts:dem,color:'#0b6e63',name:'Demand (Qd)'},{pts:sup,color:'#b1402a',name:'Supply (Qs)'}],
+      dots:[[m.P,m.Q,'#15202b','Equilibrium']]})+
+    '<h3>Schedule at selected prices</h3>'+
+    table(['Price index','Quantity demanded','Quantity supplied','Demand minus supply','Market condition'],rows);
+};
+
+RENDER[2]=()=>{
+  const pe=num('s2pev'),ps=num('s2psub'),name=sv('s2seg');
+  const res=E.segs2.map(s=>({s,r:E.choose2(s,pe,ps)}));
+  const cur=res.find(o=>o.s.name===name)||res[0];
+  const s=cur.s,r=cur.r;
+  const x0=s.M/pe,y0=s.M/ps;
+  const ind=[];for(let x=0.02;x<=x0+1e-9;x+=x0/80){ind.push([x,Math.pow(r.U/Math.pow(x,s.alpha),1/(1-s.alpha))]);}
+  $('o2').innerHTML=
+    readouts([
+      ['EV-equivalent units (this segment)',fmt(r.x,2)],
+      ['Spend on EVs (budget share × budget)',lk(r.spend,2)],
+      ['Can afford one EV at this price',r.afford?'Yes':'No',!r.afford]
+    ])+
+    plot({label:'Budget line and indifference curve',w:640,h:300,x:[0,Math.max(x0,r.x)*1.25],y:[0,Math.max(y0,r.y)*1.25],xl:'EV-equivalent units',yl:'Substitute-equivalent units',
+      series:[{pts:[[0,y0],[x0,0]],color:'#0b6e63',name:'Budget line'},{pts:ind,color:'#b1402a',dash:'6 4',name:'Indifference curve'}],
+      dots:[[r.x,r.y,'#15202b','Chosen mix']]})+
+    '<h3>All segments at these prices</h3>'+
+    table(['Segment','Budget (₹ lakh)','EV share α','Weight','EV units','Spend on EV (₹ lakh)','Affordable'],
+      res.map(o=>({cls:o.s.name===s.name?'hit':'',cells:[esc(o.s.name),fmt(o.s.M,0),fmt(o.s.alpha,2),fmt(o.s.w*100,0)+'%',fmt(o.r.x,2),fmt(o.r.spend,2),o.r.afford?'Yes':'No']})));
+};
+
+RENDER[3]=()=>{
+  const cpi=num('s3cpi'),N=num('s3inc'),ev=num('s3ev');
+  const real=E.realInc(N,cpi),ridx=real/1000,evReal=ev/(cpi/100);
+  const rows=[100,105,110,115,120,125,130].map(c=>({cls:Math.abs(c-cpi)<2.5?'hit':'',cells:[fmt(c),rs(E.realInc(N,c)),fmt(E.realInc(N,c)/1000,1),fmt(ev/(c/100),1)]}));
+  const real_pts=[],nom=[];for(let c=100;c<=130;c+=1){real_pts.push([c,E.realInc(N,c)]);nom.push([c,N]);}
+  $('o3').innerHTML=
+    readouts([
+      ['Real income, 2024 prices',rs(real)],
+      ['Real income index (R)',fmt(ridx,2)],
+      ['Real EV price index',fmt(evReal,1)],
+      ['Change in real income vs base',pct((ridx-100),1),ridx<100]
+    ])+
+    plot({label:'Nominal and real income against CPI',w:640,h:280,x:[100,130],y:[0,Math.max(N,real)*1.15],xl:'CPI, 2024 = 100',yl:'₹ per month',
+      series:[{pts:nom,color:'#55636e',dash:'5 4',name:'Nominal income (fixed)'},{pts:real_pts,color:'#0b6e63',name:'Real income'}],
+      dots:[[cpi,real,'#15202b','Current']]})+
+    table(['CPI','Real income (₹)','Real income index','Real EV price index'],rows);
+};
+
+RENDER[4]=()=>{
+  const P=num('s4P'),N=num('s4N');
+  const useR=chk('s4useR');
+  const R=useR?E.realInc(num('s3inc'),num('s3cpi'))/1000:num('s4R');
+  const Qd=E.demand(P,N,R),raw=E.demandRaw(P,N,R),c=E.cs(P,N,R);
+  const nets=[30,50,70,90].map(n=>({cls:n===N?'hit':'',cells:[fmt(n),fmt(E.demand(P,n,R))]}));
+  const split=E.segs2.map(s=>[esc(s.name),fmt(s.w*100,0)+'%',fmt(s.w*Qd,0)]);
+  const curves=[[30,'#55636e','5 4'],[50,'#0b6e63',null],[90,'#b1402a','6 4']].map(([n,col,d])=>{const pts=[];for(let p=60;p<=140;p+=2)pts.push([p,E.demand(p,n,R)]);return{pts,color:col,dash:d,name:`Ecosystem score ${n}`};});
+  $('o4').innerHTML=
+    readouts([
+      ['Quantity demanded (vehicles a month)',fmt(Qd),raw<0],
+      ['Choke price index (demand is zero above)',fmt(c.Pmax,2)],
+      ['Consumer surplus (index points × vehicles)',fmt(c.CS)],
+      ['Real income index used',fmt(R,2)]
+    ])+
+    plot({label:'Demand curves for three ecosystem scores',w:640,h:300,x:[60,140],y:[0,16000],xl:'EV market price index',yl:'Vehicles a month',series:curves,dots:[[P,Qd,'#15202b','You']]})+
+    '<div class="cols2"><div><h3>Ecosystem effect at this price</h3>'+table(['Network score','Quantity demanded'],nets)+'</div>'+
+    '<div><h3>Split by segment</h3>'+table(['Segment','Weight','Vehicles'],split)+'</div></div>'+
+    '<p class="note">Consumer surplus = ½ × (choke price − price) × quantity. It is shown in index units. Quantity is floored at zero.</p>';
+};
+
+/* ---- Step 5 ---- */
+RENDER[5]=()=>{
+  const seed=Math.round(num('s5seed'))||1,sig=num('s5sig');
+  const nP=num('s5nP'),nY=num('s5nY'),nS=num('s5nS');
+  const g=num('s5g')/100,sp=num('s5spread')/100;
+  const H=E.gen5(seed,sig,nP,nY,nS),rows=H.rows,b=E.ols(rows),R2=E.r2(rows,b);
+  const mP=E.mean(rows.map(r=>r.P)),mY=E.mean(rows.map(r=>r.Y)),mS=E.mean(rows.map(r=>r.S)),mQ=E.mean(rows.map(r=>r.Q));
+  const est=[b[1]*mP/mQ,b[2]*mY/mQ,b[3]*mS/mQ];
+  const tr=E.TRUE5;const tru=[tr.b1*mP/mQ,tr.b2*mY/mQ,tr.b3*mS/mQ];
+  const okS=[b[1]<0,b[2]>0,b[3]>0];
+  const fy25=109271;
+  const reg=b[0]+b[1]*nP+b[2]*nY+b[3]*nS;
+  const user=num('s5user');
+  const err=(user-H.actual)/H.actual;
+  LAST5={reg,actual:H.actual,user,err};
+  const base=num('s5base'),fg=num('s5fg')/100,fy=num('s5fy');
+  const fcst=base*Math.pow(1+fg,fy);
+  const pts1=rows.map(r=>[r.t,r.Q]),pts2=rows.map(r=>[r.t,E.fitted(b,r)]);
+  const lo=Math.min(...rows.map(r=>r.Q)),hi=Math.max(...rows.map(r=>r.Q));
+  $('o5').innerHTML=
+    readouts([
+      ['Months of data',fmt(rows.length)],
+      ['Share of variation explained (R²)',fmt(R2,3)],
+      ['Trend growth, FY2024–25',pct(((109271-99085)/99085)*100,2)],
+      ['Base FY2025–26 trend forecast',fmt(fy25*(1+g))]
+    ])+
+    plot({label:'Actual and fitted monthly registrations',w:640,h:280,x:[1,36],y:[Math.floor(lo/500)*500-500,Math.ceil(hi/500)*500+500],xl:'Month',yl:'Vehicles a month',
+      series:[{pts:pts1,color:'#0b6e63',name:'Simulated registrations',w:1.6},{pts:pts2,color:'#b1402a',dash:'6 4',name:'Fitted regression'}]})+
+    '<h3>Estimated effects</h3>'+
+    table(['Term','Built-in true value','Estimated','Expected sign','Sign correct'],[
+      ['Intercept β0','9,729',fmt(b[0],0),'–','–'],
+      ['Price β1','−50',fmt(b[1],1),'Negative',okS[0]?'<span class="ok">Yes</span>':'<span class="no">No</span>'],
+      ['Real income β2','30',fmt(b[2],1),'Positive',okS[1]?'<span class="ok">Yes</span>':'<span class="no">No</span>'],
+      ['Substitute price β3','15',fmt(b[3],1),'Positive',okS[2]?'<span class="ok">Yes</span>':'<span class="no">No</span>']
+    ])+
+    '<h3>Elasticities at sample means</h3>'+
+    table(['Elasticity','Formula','Estimated','Built-in true','Expected sign'],[
+      ['Price','Ep = β1 × P̄ / Q̄',fmt(est[0],2),fmt(tru[0],2),'Negative'],
+      ['Income','Ey = β2 × Ȳ / Q̄',fmt(est[1],2),fmt(tru[1],2),'Positive'],
+      ['Cross-price','Exy = β3 × S̄ / Q̄',fmt(est[2],2),fmt(tru[2],2),'Positive (substitutes)']
+    ])+
+    '<h3>Forecasts</h3>'+
+    table(['Scenario','Growth','FY2025–26 sales'],[
+      ['Worst case',pct((g-sp)*100,2),fmt(fy25*(1+g-sp))],
+      ['Base case',pct(g*100,2),fmt(fy25*(1+g))],
+      ['Best case',pct((g+sp)*100,2),fmt(fy25*(1+g+sp))]
+    ])+
+    table(['Illustrative forecast (document example)','Value'],[
+      ['Base annual sales',fmt(base)],['Growth applied each year',pct(fg*100,1)],['Period',fmt(fy,0)+' year(s)'],['Estimated annual sales',fmt(fcst)]
+    ])+
+    '<h3>Next month, regression against simulated actual</h3>'+
+    readouts([
+      ['Regression forecast',fmt(reg)],
+      ['Simulated actual',fmt(H.actual)],
+      ['Your forecast',fmt(user)],
+      ['Your error',pct(err*100,1),Math.abs(err)>0.1]
+    ]);
+};
+
+RENDER[6]=()=>{
+  const L=Math.round(num('s6L'));
+  const TP=E.TP[L],AP=L?TP/L:0,MP=L?TP-E.TP[L-1]:0;
+  let peak=1;for(let k=2;k<=8;k++)if(E.TP[k]-E.TP[k-1]>E.TP[peak]-E.TP[peak-1])peak=k;
+  const rows=E.TP.map((t,k)=>({cls:k===L?'hit':'',cells:[fmt(k),fmt(t),k?fmt(t/k,2):'–',k?fmt(t-E.TP[k-1]):'–']}));
+  const tp=E.TP.map((t,k)=>[k,t]),ap=[],mp=[];for(let k=1;k<=8;k++){ap.push([k,E.TP[k]/k]);mp.push([k,E.TP[k]-E.TP[k-1]]);}
+  $('o6').innerHTML=
+    readouts([
+      ['Total product (vehicles a month)',fmt(TP)],
+      ['Average product per team',L?fmt(AP,1):'–'],
+      ['Marginal product of this team',L?fmt(MP):'–'],
+      ['Peak marginal product',`${fmt(E.TP[peak]-E.TP[peak-1])} at team ${peak}`]
+    ])+
+    plot({label:'Total, average and marginal product',w:640,h:290,x:[0,8],y:[0,700],xl:'Labour teams',yl:'Vehicles a month',
+      series:[{pts:tp,color:'#0b6e63',name:'Total product'},{pts:ap,color:'#8c6410',dash:'6 4',name:'Average product'},{pts:mp,color:'#b1402a',name:'Marginal product'}],
+      dots:L?[[L,TP,'#0b6e63'],[L,AP,'#8c6410'],[L,MP,'#b1402a']]:[]})+
+    table(['Teams (L)','Total product','Average product','Marginal product'],rows)+
+    `<p class="note">${L>peak?'Diminishing returns are in effect: each extra team adds less than the one before it.':'Returns are still rising at this level of labour.'}</p>`;
+};
+
+RENDER[7]=()=>{
+  const Q=Math.round(num('s7Q'));
+  const VC=E.vc7(Q),TC=500+VC,AFC=500/Q,AVC=VC/Q,ATC=TC/Q,MC=E.mc7(Q);
+  let minQ=10,minA=Infinity;for(let q=10;q<=800;q++){const a=(500+E.vc7(q))/q;if(a<minA){minA=a;minQ=q;}}
+  const ser=(f)=>{const p=[];for(let q=10;q<=800;q+=5){const v=f(q);if(isFinite(v))p.push([q,v]);}return p;};
+  const rowsQ=[100,220,360,480,570,630,670,800].map(q=>({cls:q===Q?'hit':'',cells:[fmt(q),fmt(E.vc7(q),1),fmt(500+E.vc7(q),1),fmt(E.vc7(q)/q,2),fmt((500+E.vc7(q))/q,2),fmt(E.mc7(q),1)]}));
+  $('o7').innerHTML=
+    readouts([
+      ['Total cost',lk(TC,1)],
+      ['Variable cost',lk(VC,1)],
+      ['Average fixed cost',lk(AFC,2)],
+      ['Average variable cost',lk(AVC,2)],
+      ['Average total cost',lk(ATC,2)],
+      ['Marginal cost of this vehicle',lk(MC,2)]
+    ])+
+    plot({label:'Cost curves',w:640,h:300,x:[0,800],y:[0,20],xl:'Vehicles a month',yl:'₹ lakh per vehicle',
+      series:[{pts:ser(q=>500/q),color:'#8c6410',dash:'6 4',name:'Average fixed'},{pts:ser(q=>E.vc7(q)/q),color:'#55636e',name:'Average variable'},{pts:ser(q=>(500+E.vc7(q))/q),color:'#0b6e63',name:'Average total'},{pts:ser(q=>E.mc7(q)),color:'#b1402a',name:'Marginal cost'}],
+      dots:[[Q,ATC,'#0b6e63']]})+
+    `<p class="note">Lowest average total cost in this schedule: ${lk(minA,2)} at about ${fmt(minQ)} vehicles.</p>`+
+    table(['Output','Variable cost','Total cost','Average variable','Average total','Marginal cost'],rowsQ);
+};
+
+RENDER[8]=()=>{
+  const incl=[chk('s8r1'),chk('s8r2'),chk('s8r3'),chk('s8r4')];
+  const m=E.selMarket(incl);
+  const cr4=53.10+28.17+7.73+3.22,full=E.hhiFull();
+  const p0=num('s8p0'),p1=num('s8p1'),lam=num('s8lam');
+  const dPT=p1-p0,dPR=E.rival(lam,dPT),rivalNew=100+dPR;
+  const label=sv('s8struct');
+  const just={
+    'Perfect competition':`Perfect competition needs many small sellers of identical products. Four firms hold ${fmt(cr4,2)}% of this market, so this label does not fit.`,
+    'Monopolistic competition':`Monopolistic competition has many sellers with differentiated products that do not react strongly to each other. CR4 of ${fmt(cr4,2)}% makes it a weaker fit than oligopoly.`,
+    'Monopoly':`A monopoly has one seller. Tata holds ${fmt(53.10,2)}% of the JMK dataset, with large rivals beside it, so this label does not fit.`,
+    'Differentiated oligopoly':`A few large firms dominate (CR4 ${fmt(cr4,2)}%) and sell differentiated cars, so each firm's pricing affects the others. This is the document's classification, and the rival response rule in this step applies.`
+  }[label];
+  const rowsF=E.FIRMS.map((f,i)=>({cells:[esc(f.n),fmt(f.s,2)+'%',i===0?'Focal firm':(incl[i-1]?'Included':'Excluded')]}));
+  rowsF.push({cells:['Smaller makers (residual)',fmt(E.residual(),2)+'%','Always included']});
+  $('o8').innerHTML=
+    readouts([
+      ['CR4, four largest firms',fmt(cr4,2)+'%'],
+      ['HHI, full dataset',fmt(full)],
+      ['Tata share, selected market',fmt(m.tataShare,2)+'%'],
+      ['HHI, selected market',fmt(m.hhi)]
+    ])+
+    table(['Firm','JMK share, FY2024–25','Status'],rowsF)+
+    '<h3>Rival response: ΔPR = λ × ΔPT</h3>'+
+    readouts([
+      ['Change in Tata price index (ΔPT)',fmt(dPT,1)],
+      ['Change in rival price index (ΔPR)',fmt(dPR,2)],
+      ['Rival price index after the move',fmt(rivalNew,2)]
+    ])+
+    `<div class="panel" style="margin-top:.8rem"><p><strong>Market structure.</strong> ${just}</p></div>`;
+};
+
+RENDER[9]=()=>{
+  const Q=Math.round(num('s9Q'));
+  const P=25-0.02*Q,TR=Q*P,VC=E.vc7(Q),TC=500+VC,pi=TR-TC,MR=25-0.04*Q,MC=E.mc7(Q);
+  const o=E.opt9(),bf=E.brute9(),piS=E.profit9(o.Q);
+  const gap=piS-pi;
+  const why=Math.abs(Q-o.Q)<0.5?'You are at the profit-maximising output.':(Q>o.Q?`Above the optimum: at ${fmt(Q)} vehicles, marginal cost is ${lk(MC)} and marginal revenue is ${lk(MR)}, so extra vehicles now cost more than they earn.`:`Below the optimum: marginal revenue (${lk(MR)}) still exceeds marginal cost (${lk(MC)}), so one more vehicle would add profit.`);
+  const pts=[];for(let q=0;q<=800;q+=4)pts.push([q,E.profit9(q)]);
+  const lo=Math.min(...pts.map(p=>p[1])),hi=Math.max(...pts.map(p=>p[1]));
+  const ex=[300,360,362.5,400,480].map(q=>{const p=25-0.02*q,c=500+E.vc7(q);return{cls:q===Q?'hit':'',cells:[fmt(q,1),fmt(p,2),fmt(q*p,2),fmt(c,2),fmt(q*p-c,2)]};});
+  $('o9').innerHTML=
+    readouts([
+      ['Price at your output',lk(P)],
+      ['Marginal revenue',lk(MR)],
+      ['Marginal cost',lk(MC),MC>MR],
+      ['Profit at your output',lk(pi)]
+    ])+
+    plot({label:'Profit against output',w:640,h:280,x:[0,800],y:[Math.floor(lo/500)*500,Math.ceil(hi/500)*500+500],xl:'Vehicles a month',yl:'Profit, ₹ lakh a month',
+      series:[{pts,color:'#0b6e63',name:'Profit'}],dots:[[o.Q,piS,'#0b6e63','Optimum'],[Q,pi,'#b1402a','You']]})+
+    readouts([
+      ['Profit-maximising output (MR = MC)',fmt(o.Q,1)+' vehicles'],
+      ['Price at the optimum',lk(25-0.02*o.Q)],
+      ['Profit at the optimum',lk(piS)],
+      ['Gap from your output',lk(gap),gap>0.5]
+    ])+
+    `<p class="note">${why} Brute-force search over whole vehicles gives ${fmt(bf.Q)} vehicles, and profit at that point is ${lk(bf.pi)}. The formula's 362.5 is halfway between the two best whole numbers.</p>`+
+    '<h3>Worked examples from the document</h3>'+
+    table(['Output','Price (₹ lakh)','Revenue (₹ lakh)','Total cost (₹ lakh)','Profit (₹ lakh)'],ex);
+};
+
+RENDER[10]=()=>{
+  const Ps=[num('s10p1'),num('s10p2'),num('s10p3')];
+  const opts=E.SEG10.map(s=>E.seg10Opt(s));
+  const sgOpt=E.segmented(opts),sgYou=E.segmented(Ps),uniOpt=E.uniformOpt(),uni=E.uniform(uniOpt);
+  const rows=E.SEG10.map((s,i)=>({cells:[esc(s.name),fmt(s.a/s.b,2),fmt(opts[i],2),fmt(E.segQ(s,opts[i]),1),fmt(Ps[i],2),fmt(E.segQ(s,Ps[i]),1)]}));
+  $('o10').innerHTML=
+    readouts([
+      ['Profit, segmented at optimal prices',lk(sgOpt.pi,2)],
+      ['Profit, single price for all',lk(uni.pi,2)],
+      ['Gain from segmenting',lk(sgOpt.pi-uni.pi,2)],
+      ['Profit at your prices',lk(sgYou.pi,2),sgYou.pi<uni.pi]
+    ])+
+    table(['Segment','Choke price (₹ lakh)','Optimal price','Optimal quantity','Your price','Your quantity'],rows)+
+    '<h3>Comparison</h3>'+
+    table(['Pricing','Output','Revenue (₹ lakh)','Total cost (₹ lakh)','Profit (₹ lakh)'],[
+      {cls:'hit',cells:['Segmented, optimal prices',fmt(sgOpt.Q,0),fmt(sgOpt.TR,2),fmt(sgOpt.TC,2),fmt(sgOpt.pi,2)]},
+      ['Segmented, your prices',fmt(sgYou.Q,1),fmt(sgYou.TR,2),fmt(sgYou.TC,2),fmt(sgYou.pi,2)],
+      ['Uniform, price '+fmt(uniOpt,2),fmt(uni.Q,0),fmt(uni.TR,2),fmt(uni.TC,2),fmt(uni.pi,2)]
+    ])+
+    '<p class="note">Each segment\'s optimal price is (choke price + MC) ÷ 2 with MC = ₹10 lakh. A single price applies the same logic to the summed demand, Q = 1,200 − 35P.</p>';
+};
+
+RENDER[11]=()=>{
+  const N=E.nash();
+  const cell=k=>`${N.includes(k)?'<span class="tag">Nash</span> ':''}(${E.PAY[k][0]}, ${E.PAY[k][1]})`;
+  const mat=table(['Tata \\ MG','MG maintains','MG reduces'],[
+    {cls:N.includes('MM')?'hit':'',cells:['Tata maintains',cell('MM'),cell('MR')]},
+    {cls:N.includes('RM')||N.includes('RR')?'hit':'',cells:['Tata reduces',cell('RM'),cell('RR')]}
+  ]);
+  const mgStrat=sv('s11mg');
+  const hist=G11.hist;
+  const tT=hist.reduce((a,h)=>a+h.pt,0),tG=hist.reduce((a,h)=>a+h.pg,0);
+  const rowsH=hist.map(h=>({cells:[fmt(h.r),h.t==='R'?'Reduce':'Maintain',h.g==='R'?'Reduce':'Maintain',fmt(h.pt),fmt(h.pg),fmt(h.cT),fmt(h.cG)]}));
+  $('o11').innerHTML=
+    '<p class="note">Each cell shows (Tata payoff, MG payoff). If MG maintains, reducing pays Tata 120 against 100 for maintaining. If MG reduces, reducing pays 75 against 60. Reducing is therefore dominant for Tata, and the same logic holds for MG.</p>'+
+    mat+
+    readouts([
+      ['Nash equilibrium',N.map(k=>k==='RR'?'Both reduce':k).join(', ')],
+      ['Dominant strategy for Tata','Reduce'],
+      ['Rounds played',fmt(hist.length)],
+      ['Cumulative payoff, Tata',fmt(tT)]
+    ])+
+    `<div class="moves"><button data-action="move" data-move="M">Tata maintains price</button><button data-action="move" data-move="R">Tata reduces price</button><button class="quiet" data-action="reset11">Start again</button></div>`+
+    (hist.length?table(['Round','Tata','MG','Tata payoff','MG payoff','Tata total','MG total'],rowsH)+readouts([['Cumulative payoff, MG',fmt(tG)]]):'<p class="note">No rounds yet. Choose a move to start. MG responds according to the strategy selected in the panel.</p>')+
+    `<p class="note">MG is playing: ${esc(mgStrat)}.</p>`;
+};
+function mgMove(strat,hist){
+  if(strat==='Always reduce')return'R';
+  if(strat==='Always maintain')return'M';
+  return hist.length?hist[hist.length-1].t:'M';
+}
+function playRound(t){
+  const strat=sv('s11mg');
+  const g=mgMove(strat,G11.hist);
+  const pay=E.PAY[t+g];
+  const prev=G11.hist.length?G11.hist[G11.hist.length-1]:{cT:0,cG:0};
+  G11.hist.push({r:G11.hist.length+1,t,g,pt:pay[0],pg:pay[1],cT:prev.cT+pay[0],cG:prev.cG+pay[1]});
+}
+
+RENDER[12]=()=>{
+  const D=num('s12D'),B=num('s12B'),I=num('s12I'),P=num('s12P'),mec=num('s12mec');
+  const green=chk('s12green'),gc=num('s12gc'),cut=num('s12cut');
+  const base=E.scen12(P,0,0,0,green,gc,cut,mec);
+  const sh=E.scen12(P,D,B,I,green,gc,cut,mec);
+  const DG=[-30,-15,0,15,30],BG=[0,15,30],IG=[-15,0,15];
+  const prices=[];for(let p=15;p<=20.0001;p+=0.25)prices.push(parseFloat(p.toFixed(2)));
+  const stats=prices.map(p=>{
+    const b0=E.scen12(p,0,0,0,green,gc,cut,mec).pi;
+    let w=Infinity;for(const d of DG)for(const bb of BG)for(const i of IG){const v=E.scen12(p,d,bb,i,green,gc,cut,mec).pi;if(v<w)w=v;}
+    return{p,b:b0,w};
+  });
+  const neutral=stats.reduce((a,c)=>c.b>a.b?c:a),averse=stats.reduce((a,c)=>c.w>a.w?c:a);
+  const risk=sv('s12risk');
+  const chosen=risk==='Risk-averse'?averse:neutral;
+  const worstAtYou=stats.find(s=>Math.abs(s.p-P)<1e-9);
+  const runsHTML=RUNS.length?table(['Run','Demand shock','Battery shock','Infrastructure','Output','Profit (₹ lakh)','Social profit (₹ lakh)'],RUNS.map(r=>[fmt(r.n),pct(r.D,1),pct(r.B,1),pct(r.I,1),fmt(r.s.Q,1),fmt(r.s.pi,2),fmt(r.s.social,2)])):'<p class="note">Press "Draw five runs" to see the spread of outcomes. With random shocks off, every run is identical, which shows the model is repeatable.</p>';
+  $('o12').innerHTML=
+    readouts([
+      ['Average variable cost after shock',lk(sh.AVC,3)],
+      ['Revenue after shock',lk(sh.TR,1)],
+      ['Profit after shock',lk(sh.pi,1),sh.pi<base.pi],
+      ['Social profit after external cost',lk(sh.social,1),sh.social<sh.pi]
+    ])+
+    table(['Measure','Baseline','After shocks'],[
+      ['Output (vehicles a month)',fmt(base.Q,1),fmt(sh.Q,1)],
+      ['Variable cost (₹ lakh)',fmt(base.VC,1),fmt(sh.VC,1)],
+      ['Total cost (₹ lakh)',fmt(base.TC,1),fmt(sh.TC,1)],
+      ['Private profit (₹ lakh)',fmt(base.pi,1),fmt(sh.pi,1)],
+      ['External cost (₹ lakh)',fmt(base.ext,1),fmt(sh.ext,1)],
+      ['Social profit (₹ lakh)',fmt(base.social,1),fmt(sh.social,1)]
+    ])+
+    '<h3>Choosing a price under risk</h3>'+
+    readouts([
+      ['Risk-neutral choice (best baseline)',lk(neutral.p,2)],
+      ['Risk-averse choice (best worst case)',lk(averse.p,2)],
+      ['Worst-case profit at your price',worstAtYou?lk(worstAtYou.w,1):'–'],
+      ['Your selected appetite',esc(risk)]
+    ])+
+    `<p class="note">The shocks have no probabilities in the document. The risk-averse choice is the price whose worst outcome across the shock grid is best, which is ${lk(averse.p,2)} here. The risk-neutral choice maximises baseline profit only.</p>`+
+    plot({label:'Baseline and worst-case profit by price',w:640,h:260,x:[15,20],y:[Math.floor(Math.min(...stats.map(s=>s.w))/100)*100,Math.ceil(Math.max(...stats.map(s=>s.b))/100)*100+100],xl:'Selling price, ₹ lakh',yl:'Profit, ₹ lakh a month',
+      series:[{pts:stats.map(s=>[s.p,s.b]),color:'#0b6e63',name:'Baseline profit'},{pts:stats.map(s=>[s.p,s.w]),color:'#b1402a',dash:'6 4',name:'Worst case across shocks'}],
+      dots:[[neutral.p,neutral.b,'#0b6e63','Neutral'],[averse.p,averse.w,'#b1402a','Averse']]})+
+    '<h3>Simulated runs</h3>'+`<div class="moves"><button data-action="runs">Draw five runs</button><button class="quiet" data-action="clearruns">Clear runs</button></div>`+runsHTML;
+};
+function makeRuns(){
+  const seed=Math.round(num('s12seed'))||1,rnd=chk('s12rand');
+  const rg=RNG(seed);RUNS=[];
+  for(let k=1;k<=5;k++){
+    let D=num('s12D'),B=num('s12B'),I=num('s12I');
+    if(rnd){D=Math.round((-30+60*rg())*10)/10;B=Math.round(30*rg()*10)/10;I=Math.round((-15+30*rg())*10)/10;}
+    const P=num('s12P'),green=chk('s12green'),gc=num('s12gc'),cut=num('s12cut'),mec=num('s12mec');
+    RUNS.push({n:k,D,B,I,s:E.scen12(P,D,B,I,green,gc,cut,mec)});
+  }
+}
+
+/* ---- Scorecard ---- */
+function renderScore(){
+  const Q=num('s9Q');
+  const o=E.opt9(),piU=E.profit9(Q),piS=E.profit9(o.Q);
+  const Pu=25-0.02*Q,Ps=25-0.02*o.Q;
+  const passed=E.checks().filter(c=>c.ok).length,total=E.checks().length;
+  const stepsDone=[...visited].filter(v=>/^s\d+$/.test(v)).length;
+  let why;
+  if(Math.abs(Q-o.Q)<0.5)why='Your output is at the profit-maximising level.';
+  else if(Q>o.Q)why=`Your output is above the optimum. Extra vehicles now cost more than they add to revenue, because marginal cost (${lk(E.mc7(Q))}) exceeds marginal revenue (${lk(25-0.04*Q)}).`;
+  else why=`Your output is below the optimum. Marginal revenue (${lk(25-0.04*Q)}) still exceeds marginal cost (${lk(E.mc7(Q))}), so more output would add profit.`;
+  const priceLine=Math.abs(Pu-Ps)<0.05?'Your implied price matches the optimum.':`Your implied price of ${lk(Pu)} is ${Pu>Ps?'above':'below'} the optimum of ${lk(Ps)}, which ${Pu>Ps?'sacrifices volume for margin on the marginal buyers':'gives up margin for extra volume'}.`;
+  const fcLine=LAST5?`Your forecast of next month was ${fmt(LAST5.user)} against a simulated actual of ${fmt(LAST5.actual)}, an error of ${pct(LAST5.err*100,1)}. The regression forecast was ${fmt(LAST5.reg)}.`:'Open Step 5 to produce a forecast error.';
+  const items=[
+    ['Steps visited',`${stepsDone} of 12`,stepsDone===12],
+    ['Model checks passing',`${passed} of ${total}`,passed===total],
+    ['Decision log entries',`${LOG.length} (at least 3 needed)`,LOG.length>=3]
+  ];
+  $('scoreBody').innerHTML=
+    '<p class="stepno">Scorecard</p><h2>How your decisions compare with the economics</h2>'+
+    '<p class="intro">Profit alone does not show whether your reasoning was sound. This page also compares your output and price with the optimum and reports your forecast error.</p>'+
+    readouts([
+      ['Profit at your output',lk(piU)],
+      ['Profit at the optimum',lk(piS)],
+      ['Gap',lk(piS-piU),piS-piU>0.5]
+    ])+
+    `<div class="panel" style="margin-top:.6rem"><h3>Output and price</h3><p>${why}</p><p>${priceLine}</p></div>`+
+    `<div class="panel" style="margin-top:.6rem"><h3>Forecast</h3><p>${fcLine}</p></div>`+
+    '<h3>Final checklist from the brief</h3>'+
+    table(['Item','Status'],items.map(([k,v,ok])=>[k,`${v} <span class="${ok?'tag':'tag bad'}">${ok?'On track':'To do'}</span>`]))+
+    '<p class="note">Two checklist items are for your team to complete. Record every equation, parameter and source in the model document, and log all AI use with prompts and verification. Each member should be able to explain one part of the model and one validation check.</p>';
+}
+
+/* ---- Briefing ---- */
+function renderBrief(){
+  const res=E.checks(),passed=res.filter(c=>c.ok).length;
+  $('briefBody').innerHTML=
+    '<p class="stepno">Briefing</p>'+
+    '<h2>The firm, sector and unit of analysis</h2>'+
+    '<p class="intro">Read this first. Every step uses the same unit of output, time period and price base, so the results connect.</p>'+
+    '<div class="work"><div class="panel">'+
+      '<h3>The firm and its rivals</h3>'+
+      '<p>Tata Motors sells electric cars and SUVs in India. Its key rivals in this model are MG Motor, Mahindra, BYD India and Hyundai.</p>'+
+      '<h3>Unit of analysis</h3>'+
+      '<p>This simulation focuses on the Indian electric passenger vehicle market, with Tata Motors as the main company. The analysis covers Tata Motors\' electric cars and SUVs sold in India, while considering MG Motor, Mahindra, BYD and Hyundai as key competitors. The unit of output is one electric passenger vehicle sold, and the simulation uses a monthly time period. It examines monthly demand, sales volume, selling prices, production, costs, revenue and profit. The price index uses 2025 as its base year (2025 = 100) and is built from the ex-showroom prices of selected Tata EV models, held to a consistent basket where possible. Sales and output are measured in vehicles, and prices and costs in Indian rupees per vehicle.</p>'+
+    '</div><div class="panel">'+
+      '<h3>Units used in each step</h3>'+
+      table(['Quantity','Unit','Steps'],[
+        ['Sales, output and demand','Vehicles a month','1, 4, 5, 6, 7, 8, 9, 10, 12'],
+        ['Tata EV price and market price','Index points, 2025 = 100','1, 3, 4'],
+        ['CPI and real income','CPI 2024 = 100; real income index, base 100','3, 4'],
+        ['Prices, costs and profit','₹ lakh per vehicle or per month','2, 7, 9, 10, 12'],
+        ['Consumer surplus','Index points × vehicles (not rupees)','4']
+      ])+
+      '<p class="note">Watch the unit column. A price of 17.75 means ₹17.75 lakh in Step 9 but an index value in Step 1.</p>'+
+    '</div></div>'+
+    '<h2 style="margin-top:2rem">Validation checks</h2>'+
+    `<p class="intro">These checks run against the model document's own numbers each time the page loads. ${passed} of ${res.length} pass.</p>`+
+    table(['Check','Result','Detail'],res.map(c=>({cls:c.ok?'':'',cells:[esc(c.n),c.ok?'<span class="ok">Pass</span>':'<span class="no">Fail</span>',esc(c.d)]})));
+}
+
+/* ---- Decision log ---- */
+function renderLog(){
+  const opts=[...Array(12)].map((_,i)=>`<option value="${i+1}">Step ${i+1}: ${SHORT[i+1]}</option>`).join('')+'<option value="0">General</option>';
+  $('logBody').innerHTML=
+    '<p class="stepno">Decision log</p><h2>Record your decisions and reasoning</h2>'+
+    '<p class="intro">Log at least three decisions, each with your reasoning. You can save the current result from a step with the decision, so the log shows the numbers that drove your choice.</p>'+
+    '<div class="panel"><div class="field"><label for="lg-step">Step</label><select id="lg-step">'+opts+'</select></div>'+
+    '<div class="field"><label for="lg-dec">Decision</label><input type="text" id="lg-dec" placeholder="For example: priced the premium segment at ₹35 lakh"></div>'+
+    '<div class="field"><label for="lg-why">Reasoning</label><textarea id="lg-why" placeholder="Why this choice? Which equation or output drove it?"></textarea></div>'+
+    cb('lg-snap','Save the current result from this step',true)+
+    '<button data-action="addlog">Add to log</button> <button class="ghost" data-action="export">Download log as text</button></div>'+
+    (LOG.length?LOG.map((e,i)=>`<div class="logitem"><p><strong>${e.step===0?'General':'Step '+e.step}</strong>: ${esc(e.dec||'(no decision text)')}</p><p>${esc(e.why||'')}</p>${e.snap?`<p class="snap">Result at the time: ${esc(e.snap)}</p>`:''}<button class="quiet" data-action="dellog" data-i="${i}">Remove</button></div>`).join(''):'<p class="note">No entries yet.</p>');
+}
+function addLog(){
+  const step=+sv('lg-step'),dec=sv('lg-dec').trim(),why=sv('lg-why').trim();
+  if(!dec&&!why)return;
+  let snap='';
+  if(chk('lg-snap')&&step>0){const el=$('o'+step);if(el)snap=el.textContent.replace(/\s+/g,' ').trim().slice(0,400);}
+  LOG.push({step,dec,why,snap});
+  renderLog();
+}
+function exportLog(){
+  const lines=['Decision log: Tata Motors EV simulation',''];
+  LOG.forEach((e,i)=>{lines.push(`${i+1}. ${e.step===0?'General':'Step '+e.step}: ${e.dec}`);lines.push(`   Reasoning: ${e.why}`);if(e.snap)lines.push(`   Result at the time: ${e.snap}`);lines.push('');});
+  const blob=new Blob([lines.join('\n')],{type:'text/plain'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='decision_log.txt';document.body.appendChild(a);a.click();a.remove();
+}
+
+/* ---------- navigation and events ---------- */
+function show(id){
+  document.querySelectorAll('.view').forEach(v=>{v.hidden=v.id!==id;});
+  document.querySelectorAll('#rail button').forEach(b=>{if(b.dataset.go===id)b.setAttribute('aria-current','step');else b.removeAttribute('aria-current');});
+  visited.add(id);
+  if(id==='brief')renderBrief();
+  else if(id==='score')renderScore();
+  else if(id==='log')renderLog();
+  else if(/^s\d+$/.test(id))RENDER[+id.slice(1)]();
+  window.scrollTo(0,0);
+  const v=$(id);if(v)v.focus({preventScroll:true});
+}
+function onChange(e){
+  if(e.target.matches&&e.target.matches('input[type=range]'))syncOut(e.target);
+  const st=e.target.closest?e.target.closest('[data-step]'):null;
+  if(st){
+    if(e.target.id==='s11mg')G11={hist:[]};
+    RENDER[+st.dataset.step]();
+  }
+}
+document.addEventListener('input',onChange);
+document.addEventListener('change',onChange);
+document.addEventListener('click',e=>{
+  const go=e.target.closest('[data-go]');
+  if(go){show(go.dataset.go);return;}
+  const act=e.target.closest('[data-action]');if(!act)return;
+  const a=act.dataset.action;
+  if(a==='move'){playRound(act.dataset.move);RENDER[11]();}
+  else if(a==='reset11'){G11={hist:[]};RENDER[11]();}
+  else if(a==='runs'){makeRuns();RENDER[12]();}
+  else if(a==='clearruns'){RUNS=[];RENDER[12]();}
+  else if(a==='addlog'){addLog();}
+  else if(a==='dellog'){LOG.splice(+act.dataset.i,1);renderLog();}
+  else if(a==='export'){exportLog();}
+});
+
+/* ---------- build ---------- */
+function build(){
+  const rail=[['brief','Briefing','']].concat([1,2,3,4,5,6,7,8,9,10,11,12].map(n=>['s'+n,SHORT[n],n]))
+    .concat([['score','Scorecard',''],['log','Decision log',''],['guide','User guide and sources','']]);
+  $('rail').innerHTML=rail.map((r,i)=>{
+    const sep=(r[0]==='score')?'<div class="sep"></div>':(r[0]==='s1'?'<div class="sep"></div>':'');
+    const num=r[2]!==''?`<span class="n">${r[2]}</span>`:'';
+    return sep+`<button type="button" data-go="${r[0]}"${i===0?' aria-current="step"':''}>${num}<span>${esc(r[1])}</span></button>`;
+  }).join('');
+  const steps=[1,2,3,4,5,6,7,8,9,10,11,12].map(n=>{
+    const t=STEPS[n];
+    const prev=n>1?`<button class="ghost" type="button" data-go="s${n-1}">Previous step</button>`:'<span></span>';
+    const next=n<12?`<button type="button" data-go="s${n+1}">Next step</button>`:`<button type="button" data-go="score">Open scorecard</button>`;
+    return `<section class="view step" id="s${n}" data-step="${n}" hidden tabindex="-1">`+
+      `<p class="stepno">Step ${n} of 12</p><h2>${t.title}</h2><p class="intro">${t.intro}</p>`+
+      `<div class="work"><div class="panel">${t.controls}</div><div class="outputs" id="o${n}"></div></div>`+
+      `<div class="notes">${t.notes}</div><div class="pager">${prev}${next}</div></section>`;
+  }).join('');
+  const guide=`<section class="view" id="guide" hidden tabindex="-1">
+  <p class="stepno">User guide and sources</p>
+  <h2>How to use this simulation</h2>
+  <p>Purpose: this simulation lets you play the decision-maker at Tata Motors in the Indian electric passenger vehicle market. Each of the twelve steps models one part of the economics, and each has controls on the left and results on the right. Work through the steps in order, or jump using the list at the side.</p>
+  <p>Changing any control updates the results at once. Each step ends with a note explaining what the outputs mean and which values are assumptions. The briefing lists the units, and the validation checks confirm the model reproduces the document's numbers.</p>
+  <h3>What each control does</h3>
+  <div class="tablewrap"><table><thead><tr><th scope="col">Step</th><th scope="col">Control</th><th scope="col">Effect</th></tr></thead><tbody>
+    <tr><td>1</td><td>Demand and supply shifters</td><td>Move the demand or supply curve and change the equilibrium price and quantity.</td></tr>
+    <tr><td>2</td><td>Segment, EV price, substitute price</td><td>Show each segment\'s budget line and best mix between an EV and a substitute.</td></tr>
+    <tr><td>3</td><td>CPI, income, EV price index</td><td>Show how inflation changes real income and real EV prices.</td></tr>
+    <tr><td>4</td><td>Price, network score, real income</td><td>Set demand, choke price and consumer surplus.</td></tr>
+    <tr><td>5</td><td>Seed, noise, next-month values, growth, forecast inputs</td><td>Generate data, estimate the regression, and produce forecasts and an error check.</td></tr>
+    <tr><td>6</td><td>Labour teams</td><td>Read total, average and marginal product.</td></tr>
+    <tr><td>7</td><td>Output</td><td>Read fixed, variable, average and marginal costs.</td></tr>
+    <tr><td>8</td><td>Rivals, prices, λ, market structure</td><td>Change Tata\'s share and the rival response.</td></tr>
+    <tr><td>9</td><td>Output</td><td>Compare profit with the MR = MC optimum and a brute-force search.</td></tr>
+    <tr><td>10</td><td>Segment prices</td><td>Compare segmented profit with a single price.</td></tr>
+    <tr><td>11</td><td>MG strategy and Tata moves</td><td>Play repeated rounds of the pricing game.</td></tr>
+    <tr><td>12</td><td>Shocks, price, external cost, recycling, risk appetite</td><td>Show profit, social profit and worst-case outcomes.</td></tr>
+  </tbody></table></div>
+  <h3>Limits of the model</h3>
+  <p>The model is educational. Its coefficients, cost schedule, payoffs and shocks are illustrative assumptions, not Tata Motors\' actual figures. Profit shown here is a simulated result and must not be presented as Tata\'s actual profit. Consumer surplus is in index units. The external cost and risk sections are scenarios, not forecasts.</p>
+  <h3>Sources</h3>
+  <ol>
+    <li>JMK Research and Analytics (2025). EV Sales Digest: March 2025. https://jmkresearch.com/wp-content/uploads/2025/04/EV_SalesDigest_March-2025.pdf</li>
+    <li>JMK Research and Analytics (2025). Annual India EV Report Card: FY2025. https://jmkresearch.com/wp-content/uploads/2025/04/EV-Annual-Report-Card-FY2025_JMK-Research.pdf</li>
+    <li>Tata Motors (2025). Corporate Presentation 2025. https://www.tatamotors.com/wp-content/uploads/2025/08/Tata-Motors-Corporate-Presentation-2025-Final.pdf</li>
+    <li>Tata Passenger Electric Mobility (2024). Commences production at Sanand, Gujarat. https://www.tatamotors.com/press-releases/tata-passenger-electric-mobility-commences-production-at-its-state-of-the-art-new-facility-in-sanand-gujarat/</li>
+    <li>Deloitte (2024). Global Automotive Consumer Study, India findings. https://www.deloitte.com/in/en/about/press-room/almost-50-percent-of-Indian-consumers-opt-out-of-ICE-to-embrace-environment-conscious-hybrid-tech-deloitte-2024-global-automotive-consumer-study.html</li>
+    <li>HERE Technologies and SBD Automotive (2025). HERE-SBD EV Index: Consumer Survey India. https://assets.here.com/x7rx8ayph7ee/6UAoHeHufmgciEunmVfFOw/d957eb0d9cf962fbe36b8b1444e6d08d/HERE_India_SBD_EV_Index_Summary_Report_2026.pdf</li>
+    <li>Ministry of Statistics and Programme Implementation (2026). CPI press release, base 2024 = 100, October 2026. https://mospi.gov.in/uploads/latestreleasesfiles/1794480048335-Press%20Release%20of%20CPI%20for%20October%202026%20.pdf</li>
+    <li>Ministry of Heavy Industries (2024). PM E-DRIVE Scheme. https://pmedrive.heavyindustries.gov.in/</li>
+    <li>Ministry of Environment, Forest and Climate Change (2022). Battery Waste Management Rules, 2022. https://www.pib.gov.in/Pressreleaseshare.aspx?PRID=1854433</li>
+    <li>Central Pollution Control Board. Extended Producer Responsibility portal under the Battery Waste Management Rules, 2022. https://eprbattery.cpcb.gov.in/</li>
+    <li>Ministry of Heavy Industries (2025). PM E-DRIVE tenure extended to 31 March 2028. https://www.pib.gov.in/PressReleaseIframePage.aspx?PRID=2154408</li>
+    <li>Tata Motors (2025). Integrated Annual Report 2024–25. https://nsearchives.nseindia.com/corporate/TATAMOTORSSJS_24052025003654_NSEBSELETTERANNUALREPORTFINAL.pdf</li>
+  </ol>
+</section>`;
+  $('main').innerHTML=
+    '<section class="view" id="brief" hidden tabindex="-1"><div id="briefBody"></div></section>'+
+    steps+
+    '<section class="view" id="score" hidden tabindex="-1"><div id="scoreBody"></div></section>'+
+    '<section class="view" id="log" hidden tabindex="-1"><div id="logBody"></div></section>'+
+    guide;
+  document.querySelectorAll('input[type=range]').forEach(syncOut);
+  show('brief');
+}
+build();
+</script>
+</body>
+</html>
